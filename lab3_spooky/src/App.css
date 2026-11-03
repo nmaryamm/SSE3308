@@ -1,0 +1,324 @@
+.spooky-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  color: #fff;
+  pointer-events: none;
+  font-family: system-ui, 'Segoe UI', sans-serif;
+}
+
+.title-panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(51vw, 680px);
+  box-sizing: border-box;
+  padding: clamp(24px, 5vw, 72px) clamp(44px, 9vw, 126px) 28px
+    clamp(24px, 4vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(6, 8, 24, 0.96), rgba(11, 9, 37, 0.92));
+  border-right: 1px solid rgba(164, 112, 255, 0.72);
+  border-radius: 0 50% 50% 0 / 0 48% 48% 0;
+  box-shadow: 20px 0 65px rgba(2, 4, 17, 0.34);
+}
+
+.title-copy {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.eyebrow {
+  margin: 0 0 12px 3px;
+  color: #aaa5c9;
+  font-size: clamp(8px, 0.8vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+.title-copy h1 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.02em;
+  margin: 0;
+  color: #f7f7ff;
+  font-size: clamp(32px, 5.2vw, 74px);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  text-shadow: 0 2px 22px rgba(255, 255, 255, 0.16);
+  white-space: nowrap;
+}
+
+.title-copy h1 .title-accent {
+  color: #bb78ff;
+}
+
+.title-connector {
+  margin: 4px 0 0;
+  color: #ddd6ed;
+  font-size: clamp(10px, 1vw, 14px);
+  text-align: center;
+  width: min(100%, 310px);
+}
+
+.react-brand {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 17px);
+  color: #55e5f3;
+  font-size: clamp(23px, 3.5vw, 48px);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.react-brand svg {
+  width: clamp(32px, 4vw, 54px);
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 9px rgba(57, 224, 245, 0.35));
+}
+
+.react-brand span {
+  color: #f7f7ff;
+}
+
+.creator-credit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  padding: 8px 18px 8px 8px;
+  border: 1px solid rgba(174, 123, 255, 0.38);
+  border-radius: 40px;
+  background: rgba(98, 54, 166, 0.34);
+}
+
+.creator-mark {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border: 1px solid rgba(234, 224, 255, 0.7);
+  border-radius: 50%;
+  color: #e7d5ff;
+  font-family: Georgia, serif;
+  font-size: 19px;
+}
+
+.credit-by {
+  color: #c8bfdc;
+  font-size: 11px;
+}
+
+.credit-name {
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.credit-name small {
+  color: #c8bfdc;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.engine-badge {
+  position: absolute;
+  top: clamp(14px, 3vw, 34px);
+  right: clamp(16px, 3vw, 42px);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 5px #000;
+}
+
+.engine-icon {
+  color: #55e5f3;
+  font-size: 27px;
+}
+
+.engine-badge span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.engine-badge small {
+  font-size: 9px;
+}
+
+.control-hint {
+  position: absolute;
+  right: clamp(16px, 3vw, 42px);
+  bottom: clamp(14px, 3vw, 34px);
+  margin: 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 6px #000;
+}
+
+.control-hint span {
+  color: #c8bfdc;
+}
+
+.game-controls {
+  position: fixed;
+  right: clamp(16px, 3vw, 42px);
+  bottom: clamp(44px, 7vh, 68px);
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(10px, 2vw, 22px);
+  pointer-events: none;
+}
+
+.d-pad {
+  display: grid;
+  grid-template: repeat(3, clamp(30px, 4.2vw, 42px)) / repeat(3, clamp(30px, 4.2vw, 42px));
+  gap: 3px;
+  pointer-events: auto;
+}
+
+.game-button {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 7px;
+  background: rgba(29, 28, 46, 0.72);
+  color: #fff;
+  font-family: inherit;
+  font-size: clamp(13px, 1.5vw, 19px);
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(5px);
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.game-button:hover,
+.game-button:focus-visible {
+  outline: none;
+  background: rgba(132, 83, 200, 0.85);
+}
+
+.game-button:active {
+  transform: scale(0.94);
+  background: rgba(156, 100, 230, 0.92);
+}
+
+.move-up {
+  grid-area: 1 / 2;
+}
+
+.move-left {
+  grid-area: 2 / 1;
+}
+
+.move-right {
+  grid-area: 2 / 3;
+}
+
+.move-down {
+  grid-area: 3 / 2;
+}
+
+.action-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: clamp(58px, 9vw, 88px);
+  pointer-events: auto;
+}
+
+.game-button-wide {
+  height: clamp(28px, 3.8vw, 38px);
+  font-size: clamp(9px, 1vw, 12px);
+}
+
+@media (max-width: 600px) {
+  .title-panel {
+    width: min(72vw, 390px);
+    padding: 20px 68px 18px 20px;
+    border-radius: 0 42% 42% 0 / 0 35% 35% 0;
+  }
+
+  .title-copy h1 {
+    font-size: clamp(29px, 8vw, 46px);
+  }
+
+  .react-brand {
+    font-size: clamp(22px, 6vw, 34px);
+  }
+
+  .creator-credit {
+    gap: 6px;
+    padding: 6px 12px 6px 6px;
+  }
+
+  .creator-mark {
+    width: 29px;
+    height: 29px;
+  }
+
+  .credit-name {
+    font-size: 12px;
+  }
+
+  .game-controls {
+    right: 12px;
+    bottom: 18px;
+    gap: 8px;
+  }
+
+  .d-pad {
+    grid-template: repeat(3, 34px) / repeat(3, 34px);
+  }
+
+  .action-controls {
+    width: 58px;
+  }
+
+  .game-button-wide {
+    height: 30px;
+  }
+
+  .control-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 370px) {
+  .title-panel {
+    width: 75vw;
+    padding-right: 54px;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.12em;
+  }
+
+  .game-controls {
+    right: 8px;
+    gap: 5px;
+  }
+
+  .d-pad {
+    grid-template: repeat(3, 30px) / repeat(3, 30px);
+  }
+}
