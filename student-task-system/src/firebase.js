@@ -1,8 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-
-// These values are public identifiers, not secrets. Security comes from
-// Firebase Authentication + the Express backend + Firestore security rules.
+import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 const firebaseConfig = {
  apiKey: "AIzaSyDWm_mwNWMNV2Ab50xlzTJB9sNYzhTLS0c",
  authDomain: "lab7-223593.firebaseapp.com",
@@ -13,5 +12,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-// Firestore and Cloud Functions are no longer used by the browser:
-// all task operations go through the Express API (see src/api.js).
+export const db = getFirestore(app);
+export const functions = getFunctions(
+ app,
+ "asia-southeast1"
+);

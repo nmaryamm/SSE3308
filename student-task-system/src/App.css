@@ -438,19 +438,5 @@ svg { display: block; }
   .status { display: none; }
 }
 
-/* ---------- API states (Phase 3) ---------- */
+/* ---------- loading state ---------- */
 .loading-state { padding: 36px 16px; text-align: center; color: var(--muted); font-size: 0.9rem; }
-.task-edit { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; }
-.task-edit input {
-  flex: 1;
-  min-width: 0;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--coral);
-  border-radius: 9px;
-  color: var(--ink);
-}
-.task-edit input:focus { outline: 0; box-shadow: 0 0 0 3px rgb(240 88 122 / 18%); }
-.icon-btn.save { color: #1f9a6c; }
-.icon-btn.save:hover { background: #e1f6ee; color: #1f9a6c; }
-.icon-btn:disabled { opacity: 0.4; }

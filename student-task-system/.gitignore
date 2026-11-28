@@ -29,3 +29,6 @@ dist-ssr
 !.env.example
 *-firebase-adminsdk-*.json
 serviceAccount*.json
+
+# Firebase Hosting deploy cache
+.firebase/

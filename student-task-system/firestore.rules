@@ -1,13 +1,13 @@
 rules_version = '2';
 
-// All task data is accessed ONLY through the Express backend (server/),
-// which uses the Firebase Admin SDK. The Admin SDK ignores these rules,
-// so the backend checks login and task ownership itself.
-//
-// Browsers (and anyone using the public Firebase config) are denied
-// every direct read and write, even when they are logged in.
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /tasks/{taskId} {
+      allow get, list: if request.auth != null
+        && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

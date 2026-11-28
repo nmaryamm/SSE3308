@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
-import { taskApi } from "../api";
-
-// How often the task list refreshes itself while the tab is visible.
-const REFRESH_MS = 15000;
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
+import { auth, db, functions } from "../firebase";
 
 const filters = [
  { id: "all", label: "All tasks" },
@@ -24,10 +22,7 @@ const Icon = ({ name }) => {
   search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.2 4.2" /></>,
   book: <><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5v-15Z" /><path d="M5 20.5A2.5 2.5 0 0 1 7.5 18H19v3H7.5" /></>,
   trash: <><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" /></>,
-  plus: <path d="M12 5v14M5 12h14" />,
-  edit: <><path d="M4 20h4L19 9l-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>,
-  close: <path d="M6 6l12 12M18 6 6 18" />,
-  save: <path d="m5 12.5 4.5 4.5L19 7" />
+  plus: <path d="M12 5v14M5 12h14" />
  };
  return (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -36,10 +31,10 @@ const Icon = ({ name }) => {
  );
 };
 
-// The API sends dates as ISO strings, e.g. "2026-11-27T08:15:00.000Z".
-const formatDate = isoDate => {
- if (!isoDate) return "Just now";
- return new Date(isoDate).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+// createdAt is a Firestore Timestamp (null for a moment while the server sets it).
+const formatDate = timestamp => {
+ if (!timestamp?.toDate) return "Just now";
+ return timestamp.toDate().toLocaleDateString(undefined, { day: "numeric", month: "short" });
 };
 
 export default function Dashboard({ user }) {
@@ -47,41 +42,28 @@ export default function Dashboard({ user }) {
  const [loading, setLoading] = useState(true);
  const [title, setTitle] = useState("");
  const [adding, setAdding] = useState(false);
- const [editingId, setEditingId] = useState(null);
- const [editTitle, setEditTitle] = useState("");
  const [filter, setFilter] = useState("all");
  const [search, setSearch] = useState("");
  const [error, setError] = useState("");
 
- // GET /api/tasks
- const loadTasks = useCallback(async () => {
-  try {
-   setTasks(await taskApi.list());
-   setError("");
-  } catch (error) {
-   setError(error.message || "Unable to load your tasks. Please try again.");
-  } finally {
-   setLoading(false);
-  }
- }, []);
-
- // Real-time-like updates: load now, then refresh every 15 s while the tab is visible,
- // and immediately whenever the student comes back to the tab.
+ // Real-time: Firestore pushes every change to this student's tasks straight to the page.
+ // firestore.rules only allow reading tasks whose uid matches the logged-in user.
  useEffect(() => {
-  loadTasks();
-  const refreshIfVisible = () => {
-   if (document.visibilityState === "visible") loadTasks();
-  };
-  const timer = setInterval(refreshIfVisible, REFRESH_MS);
-  document.addEventListener("visibilitychange", refreshIfVisible);
-  return () => {
-   clearInterval(timer);
-   document.removeEventListener("visibilitychange", refreshIfVisible);
-  };
- }, [user.uid, loadTasks]);
-
- // Replace one task in the list with the updated copy returned by the API.
- const replaceTask = updated => setTasks(list => list.map(task => (task.id === updated.id ? updated : task)));
+  const q = query(
+   collection(db, "tasks"),
+   where("uid", "==", user.uid)
+  );
+  return onSnapshot(q, snapshot => {
+   setTasks(snapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? Infinity) - (a.createdAt?.toMillis?.() ?? Infinity)));
+   setLoading(false);
+  }, error => {
+   console.error("Task listener error:", error);
+   setError("Unable to load your tasks. Please try again.");
+   setLoading(false);
+  });
+ }, [user.uid]);
 
  const completedCount = tasks.filter(task => task.completed).length;
  const pendingCount = tasks.length - completedCount;
@@ -95,14 +77,15 @@ export default function Dashboard({ user }) {
  const recentTasks = tasks.slice(0, 4);
  const name = user.email?.split("@")[0] || "Student";
 
+ // Changes go through Cloud Functions (functions/index.js); the list updates itself via onSnapshot.
  const addTask = async event => {
   event.preventDefault();
   const taskTitle = title.trim();
   if (!taskTitle || adding) return;
   setAdding(true);
   try {
-   const created = await taskApi.create(taskTitle); // POST /api/tasks
-   setTasks(list => [created, ...list]);
+   const createTask = httpsCallable(functions, "createTask");
+   await createTask({ title: taskTitle });
    setTitle("");
    setError("");
   } catch (error) {
@@ -114,45 +97,21 @@ export default function Dashboard({ user }) {
 
  const toggleTask = async taskId => {
   try {
-   replaceTask(await taskApi.toggle(taskId)); // PATCH /api/tasks/:id/complete
+   const toggle = httpsCallable(functions, "toggleTask");
+   await toggle({ taskId });
    setError("");
   } catch (error) {
    setError(error.message || "Unable to update this task.");
-   loadTasks();
   }
  };
 
  const deleteTask = async taskId => {
   try {
-   await taskApi.remove(taskId); // DELETE /api/tasks/:id
-   setTasks(list => list.filter(task => task.id !== taskId));
+   const remove = httpsCallable(functions, "deleteTask");
+   await remove({ taskId });
    setError("");
   } catch (error) {
    setError(error.message || "Unable to delete this task.");
-   loadTasks();
-  }
- };
-
- const startEdit = task => {
-  setEditingId(task.id);
-  setEditTitle(task.title);
- };
-
- const cancelEdit = () => {
-  setEditingId(null);
-  setEditTitle("");
- };
-
- const saveEdit = async event => {
-  event.preventDefault();
-  const newTitle = editTitle.trim();
-  if (!newTitle) return;
-  try {
-   replaceTask(await taskApi.rename(editingId, newTitle)); // PUT /api/tasks/:id
-   cancelEdit();
-   setError("");
-  } catch (error) {
-   setError(error.message || "Unable to rename this task.");
   }
  };
 
@@ -295,42 +254,18 @@ export default function Dashboard({ user }) {
               </svg>
              ) : <Icon name="book" />}
             </button>
-            {editingId === task.id ? (
-             <form className="task-edit" onSubmit={saveEdit}>
-              <input
-               value={editTitle}
-               onChange={event => setEditTitle(event.target.value)}
-               onKeyDown={event => event.key === "Escape" && cancelEdit()}
-               aria-label="Task title"
-               maxLength={100}
-               autoFocus
-              />
-              <button type="submit" className="icon-btn save" disabled={!editTitle.trim()} aria-label="Save title">
-               <Icon name="save" />
-              </button>
-              <button type="button" className="icon-btn" onClick={cancelEdit} aria-label="Cancel editing">
-               <Icon name="close" />
-              </button>
-             </form>
-            ) : (
-             <>
-              <div className="task-copy">
-               <p className="task-title">{task.title}</p>
-               <p className="task-meta">
-                <Icon name="clock" /> {formatDate(task.createdAt)}
-               </p>
-              </div>
-              <span className={`status ${task.completed ? "done" : "todo"}`}>
-               {task.completed ? "Completed" : "In progress"}
-              </span>
-              <button type="button" className="icon-btn" onClick={() => startEdit(task)} aria-label={`Edit ${task.title}`}>
-               <Icon name="edit" />
-              </button>
-              <button type="button" className="icon-btn" onClick={() => deleteTask(task.id)} aria-label={`Delete ${task.title}`}>
-               <Icon name="trash" />
-              </button>
-             </>
-            )}
+            <div className="task-copy">
+             <p className="task-title">{task.title}</p>
+             <p className="task-meta">
+              <Icon name="clock" /> {formatDate(task.createdAt)}
+             </p>
+            </div>
+            <span className={`status ${task.completed ? "done" : "todo"}`}>
+             {task.completed ? "Completed" : "In progress"}
+            </span>
+            <button type="button" className="icon-btn" onClick={() => deleteTask(task.id)} aria-label={`Delete ${task.title}`}>
+             <Icon name="trash" />
+            </button>
            </li>
           );
          })}
